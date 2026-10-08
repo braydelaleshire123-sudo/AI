@@ -1,46 +1,15 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Chat</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="brand"><span class="logo">✦</span><b>AI Chat</b></div>
-    <button id="newChat" class="new-chat">＋ New chat</button>
-    <div class="side-note">Private local AI<br><span>No API key required</span></div>
-    <div class="side-bottom">Model: Qwen 0.5B<br><span>Runs in your browser</span></div>
-  </aside>
-
-  <main class="chat">
-    <header class="topbar">
-      <div><strong>AI Assistant</strong><span id="modelStatus">Loading model…</span></div>
-      <button id="clear" class="icon-btn" title="Clear conversation">⌫</button>
-    </header>
-
-    <section id="messages" class="messages">
-      <div class="welcome">
-        <div class="big-logo">✦</div>
-        <h1>How can I help?</h1>
-        <p>Ask me something and I'll generate a response using a language model running locally in your browser.</p>
-        <div class="examples">
-          <button>Explain black holes simply</button>
-          <button>Write a JavaScript function</button>
-          <button>Give me a fun science fact</button>
-        </div>
-      </div>
-    </section>
-
-    <form id="composer" class="composer">
-      <textarea id="input" rows="1" placeholder="Message AI…" autocomplete="off"></textarea>
-      <button id="send" type="submit" aria-label="Send">↑</button>
-    </form>
-    <p class="disclaimer">AI can make mistakes. The model runs locally in this browser.</p>
-  </main>
-</div>
-<script type="module" src="script.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Chat — Local AI</title><link rel="stylesheet" href="style.css"></head>
+<body><div class="app">
+<aside class="sidebar"><div class="brand"><span class="logo">✦</span><b>AI Chat</b></div>
+<button id="newChat" class="new-chat">＋ New chat</button>
+<div class="section-title">Capabilities</div><div class="cap">🧠 Conversation memory</div><div class="cap">⚡ Local WebGPU</div><div class="cap">🧮 Calculator</div><div class="cap">🕒 Date & time</div><div class="cap">💻 Code & Markdown</div>
+<div class="side-bottom">Local model<br><span id="sideStatus">Starting…</span></div></aside>
+<main class="chat"><header class="topbar"><div><strong>AI Assistant</strong><span id="modelStatus">Starting AI…</span></div>
+<div class="top-actions"><button id="regen" class="small-btn" disabled>↻ Regenerate</button><button id="clear" class="icon-btn">⌫</button></div></header>
+<section id="messages" class="messages"><div class="welcome"><div class="big-logo">✦</div><h1>How can I help?</h1><p>A faster, more capable local AI assistant. Your conversation stays in this browser.</p>
+<div class="examples"><button>Explain quantum physics simply</button><button>Write a Python game</button><button>Calculate 27 × 48</button><button>What time is it?</button></div></div></section>
+<form id="composer" class="composer"><textarea id="input" rows="1" placeholder="Message AI…" autocomplete="off"></textarea><button id="stop" type="button" class="stop" hidden>■</button><button id="send" type="submit" disabled>↑</button></form>
+<p class="disclaimer">AI can make mistakes. The model runs locally in your browser.</p></main></div>
+<script type="module" src="script.js"></script></body></html>
