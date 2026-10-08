@@ -1,75 +1,53 @@
-const agents=[
- {id:"researcher",name:"ORION",role:"Researcher",icon:"🔎",lines:[
-  "I’ll break the mission into the information we actually need.",
-  "I found the key constraints: clarity, safety, and a measurable result.",
-  "I’m passing the requirements to the planner."
- ]},
- {id:"planner",name:"NOVA",role:"Planner",icon:"🧠",lines:[
-  "I’ll turn those requirements into a sequence of manageable steps.",
-  "The plan should include checkpoints so another agent can verify each stage.",
-  "Sending the draft plan to the builder."
- ]},
- {id:"builder",name:"ATLAS",role:"Builder",icon:"🔧",lines:[
-  "I can turn that plan into a concrete workflow.",
-  "I’ll keep the workflow modular so it is easy to change.",
-  "Draft complete. Handing it to the critic."
- ]},
- {id:"critic",name:"ECHO",role:"Critic",icon:"🛡️",lines:[
-  "I’m checking the proposal for gaps and unnecessary complexity.",
-  "The main improvement is to add a final verification step.",
-  "Approved. The swarm has a complete plan."
- ]}
-];
+import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 
+const MODEL="onnx-community/Qwen2.5-0.5B-Instruct";
+let ai=null, loading=true, busy=false;
 const $=id=>document.getElementById(id);
-const agentBox=$("agents"), log=$("log"), count=$("count"), statusText=$("statusText"), dot=$("dot");
-let running=false, timer=null, step=0, messages=0;
+const messages=$("messages"), input=$("input"), send=$("send"), status=$("modelStatus");
 
-agentBox.innerHTML=agents.map(a=>`<article class="agent" id="agent-${a.id}">
-  <div class="icon">${a.icon}</div><h3>${a.name}</h3><div class="role">${a.role}</div>
-  <div class="thought" id="thought-${a.id}">Waiting...</div>
-</article>`).join("");
-
-function setActive(id,text){
-  document.querySelectorAll(".agent").forEach(x=>x.classList.remove("active"));
-  const card=$("agent-"+id); if(card){card.classList.add("active");$("thought-"+id).textContent=text}
+function addRow(role,text,typing=false){
+  const row=document.createElement("div");
+  row.className="row "+role;
+  row.innerHTML='<div class="avatar">'+(role==="user"?"Y":"✦")+'</div><div class="bubble"></div>';
+  const bubble=row.querySelector(".bubble");
+  if(typing) bubble.innerHTML='<span class="typing"><i></i><i></i><i></i></span>';
+  else bubble.textContent=text;
+  messages.appendChild(row); messages.scrollTop=messages.scrollHeight;
+  return bubble;
 }
-function addMessage(agent,text){
-  if(messages===0) log.innerHTML="";
-  const now=new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  const row=document.createElement("div"); row.className="message";
-  row.innerHTML=`<div class="from">${agent.name}<small>${agent.role}</small></div><div class="text">${text}<span class="time">${now}</span></div>`;
-  log.appendChild(row); log.scrollTop=log.scrollHeight; messages++; count.textContent=messages+" message"+(messages===1?"":"s");
+function resetWelcome(){
+  messages.innerHTML='<div class="welcome"><div class="big-logo">✦</div><h1>How can I help?</h1><p>Ask me something and I\'ll generate a response using a language model running locally in your browser.</p><div class="examples"><button>Explain black holes simply</button><button>Write a JavaScript function</button><button>Give me a fun science fact</button></div></div>';
 }
-function finish(){
-  running=false; clearInterval(timer); timer=null;
-  document.body.classList.remove("running"); statusText.textContent="COMPLETE";
-  document.querySelectorAll(".agent").forEach(x=>x.classList.remove("active"));
+async function loadModel(){
+  status.textContent="Loading model…";
+  try{
+    const device=navigator.gpu?"webgpu":"wasm";
+    ai=await pipeline("text-generation",MODEL,{device});
+    loading=false; status.textContent="Ready • "+device.toUpperCase();
+    send.disabled=false;
+  }catch(e){
+    console.error(e); loading=false; status.textContent="Model failed to load";
+    addRow("assistant","I couldn't load the local AI model. Try refreshing the page. Your browser may not support the required machine-learning features.");
+  }
 }
-function tick(){
-  if(!running)return;
-  const a=agents[step%agents.length];
-  const text=a.lines[Math.floor(step/agents.length)%a.lines.length];
-  setActive(a.id,text);
-  addMessage(a,text);
-  step++;
-  if(step>=12) setTimeout(finish,900);
+async function answer(text){
+  busy=true; send.disabled=true; input.disabled=true;
+  addRow("user",text); const bubble=addRow("assistant","",true);
+  try{
+    const prompt=[{role:"system",content:"You are a helpful, friendly AI assistant. Answer clearly and concisely. Do not claim to be conscious or human."},{role:"user",content:text}];
+    const out=await ai(prompt,{max_new_tokens:256,temperature:.7,top_p:.9,do_sample:true});
+    const generated=out[0].generated_text;
+    let answerText=Array.isArray(generated)?generated[generated.length-1]?.content:"";
+    if(!answerText) answerText=String(generated).replace(text,"").trim();
+    bubble.textContent=answerText||"I couldn't generate a response.";
+  }catch(e){console.error(e);bubble.textContent="Something went wrong while generating that response. Try again."}
+  busy=false; input.disabled=false; send.disabled=loading; input.focus();
 }
-$("start").onclick=()=>{
-  if(running)return;
-  running=true; step=0; messages=0; count.textContent="0 messages"; log.innerHTML="";
-  document.body.classList.add("running"); statusText.textContent="RUNNING";
-  addMessage(agents[0],"Mission received: "+$("mission").value);
-  step=0; tick(); timer=setInterval(tick,1500);
-};
-$("stop").onclick=()=>{
-  if(!running)return;
-  running=false; clearInterval(timer); timer=null; document.body.classList.remove("running"); statusText.textContent="PAUSED";
-  addMessage(agents[0],"Simulation paused. No external systems are being contacted.");
-};
-$("clear").onclick=()=>{
-  if(running)return;
-  log.innerHTML='<div class="empty">Press Start to begin the simulation.</div>';
-  messages=0; step=0; count.textContent="0 messages"; statusText.textContent="READY";
-  agents.forEach(a=>$("thought-"+a.id).textContent="Waiting...");
-};
+$("composer").addEventListener("submit",e=>{e.preventDefault();const text=input.value.trim();if(!text||busy||loading||!ai)return;input.value="";answer(text)});
+input.addEventListener("input",()=>{input.style.height="auto";input.style.height=Math.min(input.scrollHeight,160)+"px"});
+input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("composer").requestSubmit()}});
+$("clear").onclick=()=>{if(!busy)resetWelcome()};
+$("newChat").onclick=()=>{if(!busy){resetWelcome();input.focus()}};
+messages.addEventListener("click",e=>{if(e.target.matches(".examples button")){input.value=e.target.textContent;input.focus();input.style.height="auto";input.style.height=input.scrollHeight+"px"}});
+send.disabled=true;
+loadModel();
