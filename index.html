@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Swarm Lab</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <p class="eyebrow">MULTI-AGENT SIMULATOR</p>
+        <h1>AI Swarm Lab</h1>
+        <p class="sub">Watch four simulated agents collaborate on a task.</p>
+      </div>
+      <div class="status"><span id="dot"></span><span id="statusText">READY</span></div>
+    </header>
+
+    <section class="controls">
+      <label>Mission <input id="mission" value="Design a safe plan for organizing a complex project."></label>
+      <button id="start">▶ Start</button>
+      <button id="stop" class="secondary">■ Stop</button>
+      <button id="clear" class="secondary">Clear log</button>
+    </section>
+
+    <section class="agents" id="agents"></section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Communication Log</h2><span id="count">0 messages</span></div>
+      <div id="log" class="log"><div class="empty">Press Start to begin the simulation.</div></div>
+    </section>
+
+    <footer>Simulation only — no real network access or external AI agents are used.</footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
